@@ -44,8 +44,9 @@ void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NO
     int i;
     int count;
     NODE* start = head;
+    int iters = min(numThreads, listSize);
     #pragma omp parallel for num_threads(numThreads)
-        for (i = 0; i < min(numThreads, listSize); i++) {
+        for (i = 0; i < iters; i++) {
             // iterate to the proper starting node, so we don't need to repeat the iteration for each rule
             start = head;
             count = 0;
@@ -55,7 +56,7 @@ void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NO
                 }
                 start = start->next;
             }
-            if (i == numThreads - 1) {
+            if (i == iters - 1) {
                 rule1(start, sectionSize + spillOver);
                 rule2(start, sectionSize + spillOver);
             } else {

@@ -30,11 +30,8 @@ void a_to_ab(NODE* n, int numNodes) {
                     // insert a node after with value 'b'
                     insert(n, 'b');
                 }
-                count++;
-            } else {
-                // count it
-                count++;
             }
+            count++;
         }
         n = n->next;
     }
@@ -88,11 +85,8 @@ void b_to_ba(NODE* n, int numNodes) {
                     // insert a node after with value 'a'
                     insert(n, 'a');
                 }
-                count++;
-            } else {
-                // count it
-                count++;
             }
+            count++;
         }
         n = n->next;
     }
