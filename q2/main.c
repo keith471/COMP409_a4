@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "dfa.h"
+#include "results.h"
 
 long STRINGLENGTH = 5;
 
@@ -23,7 +25,84 @@ void genString(char* str) {
     }
 }
 
-void process(char* str, int numThreads) {
+int min(int a, int b) {
+    if (a < b) return a;
+    return b;
+}
+
+char* concat(const char *s1, const char *s2) {
+
+    char *result = malloc(strlen(s1)+strlen(s2)+1); // + 1 for the null-terminator
+    // should check for malloc errors here
+    printf("3-\n");
+    strcpy(result, s1);
+    printf("4-\n");
+    strcat(result, s2);
+    printf("5-\n");
+    return result;
+}
+
+char* combine(RESULT* firstRes, OPTIMISTICRESULT* optiRes[], int numThreads) {
+
+    RESULT* currRes = firstRes;
+
+    // first, blank out anything that needs to be blanked
+    int i;
+    for (i = 0; i < numThreads; i++) {
+        if (currRes->endingState->isStarting) {
+            if (currRes->lastPartialStart != -1 && optiRes[i]->startState->str[0] == ' ') {
+                blank(currRes->str, currRes->lastPartialStart, strlen(currRes->str) - 1);
+            }
+            currRes = optiRes[i]->startState;
+        } else if (currRes->endingState->isState1) {
+            if (currRes->lastPartialStart != -1 && optiRes[i]->state1->str[0] == ' ') {
+                blank(currRes->str, currRes->lastPartialStart, strlen(currRes->str) - 1);
+            }
+            currRes = optiRes[i]->state1;
+        } else if (currRes->endingState->isState2) {
+            if (currRes->lastPartialStart != -1 && optiRes[i]->state2->str[0] == ' ') {
+                blank(currRes->str, currRes->lastPartialStart, strlen(currRes->str) - 1);
+            }
+            currRes = optiRes[i]->state2;
+        } else if (currRes->endingState->isState3) {
+            if (currRes->lastPartialStart != -1 && optiRes[i]->state3->str[0] == ' ') {
+                blank(currRes->str, currRes->lastPartialStart, strlen(currRes->str) - 1);
+            }
+            currRes = optiRes[i]->state3;
+        } else if (currRes->endingState->isAccept) {
+            if (currRes->lastPartialStart != -1 && optiRes[i]->acceptState->str[0] == ' ') {
+                blank(currRes->str, currRes->lastPartialStart, strlen(currRes->str) - 1);
+            }
+            currRes = optiRes[i]->acceptState;
+        }
+    }
+
+    // now, concatenate all the strings
+    currRes = firstRes;
+    char* res = firstRes->str;
+    for (i = 0; i < numThreads; i++) {
+        if (currRes->endingState->isStarting) {
+            res = concat(res, optiRes[i]->startState->str);
+            currRes = optiRes[i]->startState;
+        } else if (currRes->endingState->isState1) {
+            res = concat(res, optiRes[i]->state1->str);
+            currRes = optiRes[i]->state1;
+        } else if (currRes->endingState->isState2) {
+            res = concat(res, optiRes[i]->state2->str);
+            currRes = optiRes[i]->state2;
+        } else if (currRes->endingState->isState3) {
+            res = concat(res, optiRes[i]->state3->str);
+            currRes = optiRes[i]->state3;
+        } else if (currRes->endingState->isAccept) {
+            res = concat(res, optiRes[i]->acceptState->str);
+            currRes = optiRes[i]->acceptState;
+        }
+    }
+
+    return res;
+}
+
+char* process(char* str, int numThreads) {
     // divide the string into numThreads + 1 pieces
     // first thread gets the first part of the string and performs normal matching on it
     // meanwhile, numThreads get the other parts of the string and each try matching from
@@ -31,28 +110,61 @@ void process(char* str, int numThreads) {
     // if/when all five possibilities converge, the thread may start normal, sequential recognition --> what does this mean?
     // each optimistic thread could keep a map from starting state to resulting string
 
+    // compute the number of sections
+    int numSections = min(strlen(str), numThreads + 1);
+    // the section size is guaranteed to be at least 1
+    int sectionSize = strlen(str) / numSections;
+    // the last section could be a little longer but we don't care since match has a flag for this
+
+    // Prepare the results structs
+    RESULT* firstSectionRes;
+
+    OPTIMISTICRESULT* optiRes[numSections - 1];
+    int i;
+    for (i = 0; i < numSections - 1; i++) {
+        optiRes[i] = NULL;
+    }
+
     #pragma omp sections
     {
         #pragma omp section
         {
-            printf("I'm the main thread!\n");
+            if (numSections == 1) {
+                firstSectionRes = match(str, STARTSTATE, 0, sectionSize, 1);
+            } else {
+                firstSectionRes = match(str, STARTSTATE, 0, sectionSize, 0);
+            }
         }
 
         #pragma omp section
         {
-            int i;
             #pragma omp parallel for num_threads(numThreads)
-                for (i = 0; i < 10; i++) {
-                    printf("%d\n", i);
+                // each thread assigned a section of the string
+                // tries matching starting from every state possible
+                // saves the result in a map
+                for (i = 0; i < numSections - 1; i++) {
+                    if (i == numSections - 2) {
+                        optiRes[i] = optimisticMatch(str, (i + 1) * sectionSize, sectionSize, 1);
+                    } else {
+                        optiRes[i] = optimisticMatch(str, (i + 1) * sectionSize, sectionSize, 0);
+                    }
                 }
-
         }
     }
 
-    printf("This is after the sections\n");
-
     // at this point, all threads have rejoined and we can sequentially handle the entire string, using
     // the ending state of the first section as the starting state of the second, etc.
+    // so we need to number the sections of strings
+
+    char* blankedStr;
+
+    if (numSections == 1) {
+        blankedStr = firstSectionRes->str;
+    } else {
+        blankedStr = combine(firstSectionRes, optiRes, numThreads);
+    }
+
+    return blankedStr;
 }
 
 int main(int argc, char* argv[]) {
@@ -79,6 +191,15 @@ int main(int argc, char* argv[]) {
     // initialize the dfa
     initDfa();
 
+    // test out match
+
+    RESULT* res = match("839985.39x593809.4x549.3", STATE1, 10, -1, 1);
+
+    printf("%d\n", strlen(res->str));
+    printf("%s\n", res->str);
+
     // process it!
-    process(str, numThreads);
+    char* blankedStr = process("839985.39x593809.4x549.3", numThreads);
+
+    printf("%s\n", blankedStr);
 }

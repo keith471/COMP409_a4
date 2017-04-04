@@ -18,6 +18,10 @@ STATE* getTransitionlessSTATE() {
     STATE* s = NEW(STATE);
     s->isAccept = 0;
     s->isReject = 0;
+    s->isState1 = 0;
+    s->isState2 = 0;
+    s->isState3 = 0;
+    s->isStarting = 0;
     s->transitions = NULL;
     return s;
 }
@@ -26,6 +30,10 @@ STATE* getTransitionlessAcceptSTATE() {
     STATE* s = NEW(STATE);
     s->isAccept = 1;
     s->isReject = 0;
+    s->isState1 = 0;
+    s->isState2 = 0;
+    s->isState3 = 0;
+    s->isStarting = 0;
     s->transitions = NULL;
     return s;
 }
@@ -34,6 +42,10 @@ STATE* getTransitionlessRejectSTATE() {
     STATE* s = NEW(STATE);
     s->isAccept = 0;
     s->isReject = 1;
+    s->isState1 = 0;
+    s->isState2 = 0;
+    s->isState3 = 0;
+    s->isStarting = 0;
     s->transitions = NULL;
     return s;
 }
@@ -81,9 +93,13 @@ TRANSITION* prependTRANSITION(TRANSITION* prevs, TRANSITION* curr) {
 void initDfa() {
     // create the states, minus transitions
     STARTSTATE = getTransitionlessSTATE();
+    STARTSTATE->isStarting = 1;
     STATE1 = getTransitionlessSTATE();
+    STATE1->isState1;
     STATE2 = getTransitionlessSTATE();
+    STATE2->isState2;
     STATE3 = getTransitionlessSTATE();
+    STATE3->isState3;
     ACCEPTSTATE = getTransitionlessAcceptSTATE();
     REJECTSTATE = getTransitionlessRejectSTATE();
 
@@ -133,6 +149,7 @@ STATE* getNextState(STATE* currState, char c) {
         }
         t = t->next;
     }
+    printf("char is: %c\n");
     // will never hit this
     return NULL;
 }

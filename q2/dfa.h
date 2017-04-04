@@ -17,6 +17,10 @@ typedef struct TRANSITION {
 typedef struct STATE {
     int isAccept;
     int isReject;
+    int isState1;
+    int isState2;
+    int isState3;
+    int isStarting;
     struct TRANSITION* transitions;
 } STATE;
 
