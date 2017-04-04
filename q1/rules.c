@@ -2,7 +2,17 @@
 #include <stdlib.h>
 #include "rules.h"
 
-void a_to_b(NODE* n, int numNodes) {
+void a_to_b(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -21,7 +31,17 @@ void a_to_b(NODE* n, int numNodes) {
     }
 }
 
-void a_to_ab(NODE* n, int numNodes) {
+void a_to_ab(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -37,7 +57,17 @@ void a_to_ab(NODE* n, int numNodes) {
     }
 }
 
-void a_to_aba(NODE* n, int numNodes) {
+void a_to_aba(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -57,7 +87,17 @@ void a_to_aba(NODE* n, int numNodes) {
     }
 }
 
-void a_to_ac(NODE* n, int numNodes) {
+void a_to_ac(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -76,7 +116,17 @@ void a_to_ac(NODE* n, int numNodes) {
     }
 }
 
-void b_to_ba(NODE* n, int numNodes) {
+void b_to_ba(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -92,7 +142,17 @@ void b_to_ba(NODE* n, int numNodes) {
     }
 }
 
-void b_to_bbb(NODE* n, int numNodes) {
+void b_to_bbb(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -102,17 +162,24 @@ void b_to_bbb(NODE* n, int numNodes) {
                     insert(n, 'b');
                     insert(n, 'b');
                 }
-                count++;
-            } else {
-                // count it
-                count++;
             }
+            count++;
         }
         n = n->next;
     }
 }
 
-void b_to_abc(NODE* n, int numNodes) {
+void b_to_abc(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {
@@ -135,7 +202,17 @@ void b_to_abc(NODE* n, int numNodes) {
     }
 }
 
-void c_to_ca(NODE* n, int numNodes) {
+void c_to_ca(NODE* n, int startAt, int numNodes) {
+    // first, iterate to the proper starting node
+    int i = 0;
+    while (i < startAt) {
+        if (!n->skip) {
+            i++;
+        }
+        n = n->next;
+    }
+    // then, iterate until you've encountered numNodes nodes (not including those
+    // you should skip), using the generation rule where applicable
     int count = 0;
     while (count < numNodes && n != NULL) {
         if (!n->skip) {

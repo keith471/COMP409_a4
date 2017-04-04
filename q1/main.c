@@ -33,13 +33,17 @@ int min(int a, int b) {
 // Generator
 //==============================================================================
 
-void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NODE*, int)) {
+void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int, int), void (*rule2)(NODE*, int, int), void (*rule3)(NODE*, int, int)) {
     // need to split the list into sections, one section per thread
     int listSize = size(head);
     int sectionSize = listSize / numThreads;
-    if (sectionSize == 0) sectionSize = 1;
-    // the last section might be a little longer, by the amount spillOver
-    int spillOver = listSize % numThreads;
+    int spillOver = 0;
+    if (sectionSize == 0) {
+        sectionSize = 1;
+    } else {
+        // the last section might be a little longer, by the amount spillOver
+        spillOver = listSize % numThreads;
+    }
 
     int i;
     int count;
@@ -47,21 +51,19 @@ void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NO
     int iters = min(numThreads, listSize);
     #pragma omp parallel for num_threads(numThreads)
         for (i = 0; i < iters; i++) {
-            // iterate to the proper starting node, so we don't need to repeat the iteration for each rule
-            start = head;
-            count = 0;
-            while (count < i * sectionSize && start != NULL) {
-                if (!start->skip) {
-                    count++;
+            if (i == (iters - 1)) {
+                // always have at least two rules, and maybe a third
+                rule1(start, i * sectionSize, sectionSize + spillOver);
+                rule2(start, i * sectionSize, sectionSize + spillOver);
+                if (rule3 != NULL) {
+                    rule3(start, i * sectionSize, sectionSize + spillOver);
                 }
-                start = start->next;
-            }
-            if (i == iters - 1) {
-                rule1(start, sectionSize + spillOver);
-                rule2(start, sectionSize + spillOver);
             } else {
-                rule1(start, sectionSize);
-                rule2(start, sectionSize);
+                rule1(start, i * sectionSize, sectionSize);
+                rule2(start, i * sectionSize, sectionSize);
+                if (rule3 != NULL) {
+                    rule3(start, i * sectionSize, sectionSize);
+                }
             }
         }
 }
@@ -73,14 +75,14 @@ void gen(NODE* head, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NO
 /*
  * alternates between generation and printing
  */
-void run(NODE* head, int numGens, int numThreads, void (*rule1)(NODE*, int), void (*rule2)(NODE*, int)) {
+void run(NODE* head, int numGens, int numThreads, void (*rule1)(NODE*, int, int), void (*rule2)(NODE*, int, int), void (*rule3)(NODE*, int, int)) {
     // first, print the current string
     printList(head);
 
     // alternate generation and printing for numGens iterations
     int i;
     for (i = 0; i < numGens; i++) {
-        gen(head, numThreads, rule1, rule2); // we can do this with multiple threads
+        gen(head, numThreads, rule1, rule2, rule3); // we can do this with multiple threads
         reset(head); // we'll do this with one thread, though we could use more
         printList(head); // we have to do this with one thread
     }
@@ -94,16 +96,16 @@ void start(int initState, int numGens, int numThreads) {
     NODE* head = initLinkedList(initState);
     switch (initState) {
         case 1:
-            run(head, numGens, numThreads, a_to_ab, b_to_ba);
+            run(head, numGens, numThreads, a_to_ab, b_to_ba, NULL);
             break;
         case 2:
-            run(head, numGens, numThreads, a_to_b, b_to_ba);
+            run(head, numGens, numThreads, a_to_b, b_to_ba, NULL);
             break;
         case 3:
-            run(head, numGens, numThreads, a_to_aba, b_to_bbb);
+            run(head, numGens, numThreads, a_to_aba, b_to_bbb, NULL);
             break;
         case 4:
-            //run(head, numGens, );
+            run(head, numGens, numThreads, a_to_ac, b_to_abc, c_to_ca);
             break;
         default:
             fprintf(stderr, "ERROR: Invalid initial state. Valid options are 1, 2, 3, or 4.\n");
